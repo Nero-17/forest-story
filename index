@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>森林小冒险 — 5关小游戏</title>
+  <meta name="description" content="一个10分钟内的可爱解谜小网页" />
+  <style>
+    :root{
+      --bg:#0b0d12;
+      --panel:#121624;
+      --text:#e7e8ee;
+      --muted:#a7adc0;
+      --accent:#7aa2ff;
+      --danger:#ff6b6b;
+      --ok:#6bff95;
+      --border:rgba(231,232,238,.14);
+      --shadow: 0 10px 40px rgba(0,0,0,.45);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      background: radial-gradient(1200px 600px at 30% 20%, rgba(122,162,255,.12), transparent 60%),
+                  radial-gradient(900px 500px at 70% 60%, rgba(107,255,149,.08), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .wrap{width:min(860px, 100%)}
+    header{
+      display:flex; align-items:baseline; justify-content:space-between;
+      margin-bottom:14px;
+    }
+    .title{
+      font-weight:650;
+      letter-spacing:1.2px;
+      font-size:14px;
+      color:var(--muted);
+      text-transform:uppercase;
+    }
+    .progress{
+      font-family:var(--mono);
+      color:var(--muted);
+      font-size:12px;
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      border-radius:var(--radius);
+      overflow:hidden;
+    }
+    .card-inner{padding:22px 22px 18px}
+    .scene-title{
+      font-family:var(--mono);
+      font-size:12px;
+      color:rgba(231,232,238,.7);
+      margin:0 0 10px 0;
+      text-transform:uppercase;
+      letter-spacing:1px;
+    }
+    .text{
+      line-height:1.75;
+      font-size:16px;
+      color:rgba(231,232,238,.94);
+      white-space:pre-wrap;
+      margin:0;
+    }
+    .divider{
+      height:1px;
+      background:var(--border);
+      margin:18px 0;
+    }
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .btn{
+      appearance:none;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:14px;
+      cursor:pointer;
+      font-size:14px;
+      transition:transform .04s ease, border-color .2s ease, background .2s ease;
+    }
+    .btn:hover{border-color:rgba(122,162,255,.45); background:rgba(122,162,255,.08)}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{
+      border-color:rgba(122,162,255,.5);
+      background:rgba(122,162,255,.14);
+    }
+    .btn.danger:hover{border-color:rgba(255,107,107,.5); background:rgba(255,107,107,.10)}
+    .input{
+      flex:1;
+      min-width:220px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      padding:10px 12px;
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+      outline:none;
+      font-size:14px;
+      font-family:var(--mono);
+    }
+    .input:focus{border-color:rgba(122,162,255,.55)}
+    .hint{
+      font-size:12px;
+      color:rgba(231,232,238,.65);
+      margin-top:10px;
+      font-family:var(--mono);
+    }
+    .status{
+      margin-top:10px;
+      font-family:var(--mono);
+      font-size:12px;
+      color:rgba(231,232,238,.7);
+    }
+    .status.ok{color:rgba(107,255,149,.85)}
+    .status.bad{color:rgba(255,107,107,.85)}
+    footer{
+      display:flex; justify-content:space-between; align-items:center;
+      margin-top:12px;
+      color:rgba(231,232,238,.55);
+      font-size:12px;
+      font-family:var(--mono);
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    .imgwrap{
+      margin-top:14px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      overflow:hidden;
+      background:rgba(0,0,0,.18);
+    }
+    .imgwrap img{
+      width:100%;
+      height:auto;
+      display:block;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">FOREST QUEST — MINI</div>
+      <div class="progress" id="progress"></div>
+    </header>
+
+    <div class="card">
+      <div class="card-inner">
+        <div class="scene-title" id="sceneTitle">...</div>
+
+        <p class="text" id="sceneText">Loading...</p>
+
+        <div id="imageArea" style="display:none;">
+          <div class="imgwrap">
+            <img id="sceneImg" alt="" />
+          </div>
+          <div id="imgCaption" class="hint" style="margin-top:8px;"></div>
+        </div>
+
+        <div id="puzzleArea" style="display:none;">
+          <div class="divider"></div>
+          <div class="row">
+            <input class="input" id="answerInput" placeholder="在这里输入答案…" autocomplete="off" />
+            <button class="btn primary" id="submitBtn">输入</button>
+          </div>
+          <div class="hint" id="hintText"></div>
+          <div class="status" id="statusText"></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="row">
+          <button class="btn" id="backBtn">Back</button>
+          <button class="btn primary" id="nextBtn">Next</button>
+          <span style="flex:1"></span>
+          <button class="btn danger" id="resetBtn">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div>Progress saved locally · <span id="saveKeyLabel"></span></div>
+      <div><a href="#" id="exportBtn">Export</a> · <a href="#" id="importBtn">Import</a></div>
+    </footer>
+  </div>
+
+<script>
+/**
+ * 单文件 5 关小游戏引擎：
+ * - 每关：图片 + 文字
+ * - 前四关：输入答案解锁下一关
+ * - 第五关：结尾
+ */
+
+const SAVE_KEY = "forest_quest_5levels_v1";
+
+/**
+ * 图片放置方式（两选一）：
+ * 1) 最简单：把 1.png~5.png 跟 index.html 放同一文件夹
+ *    -> src: "./1.png"
+ * 2) 更整洁：把图片放在 assets/ 目录
+ *    -> src: "./assets/1.png"
+ */
+const IMG_PREFIX = "./"; // 如果你用 assets/，把这里改成 "./assets/"
+
+const SCENES = [
+  {
+    title: "第 1 关",
+    text:
+`很久很久以前，在森林里有一群可爱的宝可梦幸福地生活在一起。他们每天无忧无虑非常快乐。
+请问，图中有多少只鼠鼠宝可梦呢？`,
+    image: { src: IMG_PREFIX + "1.png", alt: "level 1" },
+    puzzle: {
+      hint: "提示：直接输入数字。",
+      answers: ["6"],
+      onCorrectGoto: 1
+    }
+  },
+  {
+    title: "第 2 关",
+    text:
+`有一天，森林里的宝可梦们决定一起出去玩。他们走着走着突然发现有一个小朋友不见了！请问这个小朋友是谁呢？`,
+    image: { src: IMG_PREFIX + "2.png", alt: "level 2" },
+    puzzle: {
+      hint: "提示：输入宝可梦的名字（中文）。",
+      answers: ["咚咚鼠"],
+      onCorrectGoto: 2
+    }
+  },
+  {
+    title: "第 3 关",
+    text:
+`大家终于开心地一起出发了！在路上，泥驴仔一直想逗火斑喵开心 ，但是猫猫对它却很冷淡。这是为什么呢？`,
+    image: { src: IMG_PREFIX + "3.png", alt: "level 3" },
+    puzzle: {
+      hint: "提示：输入那句“原因”。",
+      answers: ["哈基米难被驴逗"],
+      onCorrectGoto: 3
+    }
+  },
+  {
+    title: "第 4 关",
+    text:
+`大家玩呀玩玩到了晚上，结果咚咚鼠因为在路上睡大觉不小心走丢了！这该怎么办呀，咚咚鼠一个鼠怕死了，天太黑了，哪里都不敢去。这个时候聪明的咚咚鼠大喊了几声，马上就有一只宝可梦来找她了！请问咚咚鼠喊了什么呢？`,
+    image: { src: IMG_PREFIX + "4.png", alt: "level 4" },
+    puzzle: {
+      hint: "提示：两个一样的词连在一起。",
+      answers: ["锻匠锻匠"],
+      onCorrectGoto: 4
+    }
+  },
+  {
+    title: "第 5 关 · 结尾",
+    text:
+`布拨带着咚咚鼠找到了大家。大家看着委屈的咚咚鼠，突然掏出了一个大蛋糕！原来今天是咚咚鼠的生日呀。最后，咚咚鼠和大家开心地吃起了蛋糕！度过了一个快乐又难忘的生日。`,
+    image: { src: IMG_PREFIX + "5.png", alt: "level 5" }
+  }
+];
+
+const $ = (id) => document.getElementById(id);
+
+let state = loadState();
+render();
+
+$("nextBtn").addEventListener("click", () => {
+  const scene = SCENES[state.idx];
+  if (scene?.puzzle && !state.solved[state.idx]) {
+    setStatus("这一关还没解锁：先输入正确答案再继续哦。", "bad");
+    return;
+  }
+  goTo(state.idx + 1);
+});
+
+$("backBtn").addEventListener("click", () => goTo(state.idx - 1));
+
+$("resetBtn").addEventListener("click", () => {
+  if (!confirm("确定要重置进度吗？")) return;
+  state = { idx: 0, solved: {} };
+  saveState();
+  render();
+});
+
+$("submitBtn").addEventListener("click", tryAnswer);
+$("answerInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") tryAnswer();
+});
+
+$("exportBtn").addEventListener("click", (e) => {
+  e.preventDefault();
+  const data = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+  navigator.clipboard?.writeText(data);
+  alert("存档码已复制到剪贴板。");
+});
+
+$("importBtn").addEventListener("click", (e) => {
+  e.preventDefault();
+  const data = prompt("粘贴存档码：");
+  if (!data) return;
+  try{
+    const json = decodeURIComponent(escape(atob(data.trim())));
+    const incoming = JSON.parse(json);
+    if (!incoming || typeof incoming.idx !== "number" || typeof incoming.solved !== "object") {
+      throw new Error("存档格式不对");
+    }
+    state = incoming;
+    saveState();
+    render();
+    alert("导入成功。");
+  } catch(err){
+    alert("导入失败：" + err.message);
+  }
+});
+
+// 更“宽容”的答案匹配：去空格、去常见标点、全角转半角、统一大小写
+function toHalfWidth(str){
+  return str.replace(/[\uFF01-\uFF5E]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+            .replace(/\u3000/g, " ");
+}
+function normalise(s){
+  const t = toHalfWidth((s ?? "").toString())
+    .trim()
+    .toLowerCase();
+
+  // 去掉空白和常见标点（保留中文与数字字母）
+  return t
+    .replace(/\s+/g, "")
+    .replace(/[，,。.!！?？:：;；"“”'‘’（）()\[\]【】<>《》\-—_]/g, "");
+}
+
+function tryAnswer(){
+  const scene = SCENES[state.idx];
+  if (!scene?.puzzle) return;
+
+  const raw = $("answerInput").value;
+  const a = normalise(raw);
+
+  const ok = scene.puzzle.answers.some(ans => normalise(ans) === a);
+  if (!ok){
+    setStatus("不对哦，再想想～", "bad");
+    return;
+  }
+
+  state.solved[state.idx] = true;
+  saveState();
+
+  setStatus("答对啦！进入下一关～", "ok");
+  $("answerInput").value = "";
+
+  const jump = scene.puzzle.onCorrectGoto;
+  if (typeof jump === "number") goTo(jump);
+  else render();
+}
+
+function goTo(i){
+  const clamped = Math.max(0, Math.min(SCENES.length - 1, i));
+  state.idx = clamped;
+  saveState();
+  render();
+}
+
+function setStatus(msg, kind){
+  const el = $("statusText");
+  el.textContent = msg || "";
+  el.className = "status" + (kind ? " " + kind : "");
+}
+
+function render(){
+  const scene = SCENES[state.idx];
+
+  $("sceneTitle").textContent = scene?.title ?? "（缺少关卡）";
+  $("sceneText").textContent = scene?.text ?? "";
+  $("progress").textContent = `关卡 ${state.idx + 1} / ${SCENES.length}`;
+  $("saveKeyLabel").textContent = SAVE_KEY;
+
+  // back/next enable
+  $("backBtn").disabled = state.idx === 0;
+  $("nextBtn").disabled = state.idx === SCENES.length - 1;
+
+  // image
+  const img = scene?.image;
+  if (img?.src) {
+    $("imageArea").style.display = "";
+    $("sceneImg").src = img.src;
+    $("sceneImg").alt = img.alt || "";
+    $("imgCaption").textContent = img.caption || "";
+  } else {
+    $("imageArea").style.display = "none";
+    $("sceneImg").removeAttribute("src");
+    $("imgCaption").textContent = "";
+  }
+
+  // puzzle
+  const hasPuzzle = !!scene?.puzzle;
+  const solved = !!state.solved[state.idx];
+
+  if (hasPuzzle && !solved){
+    $("puzzleArea").style.display = "";
+    $("hintText").textContent = scene.puzzle.hint || "";
+    setStatus("", "");
+    setTimeout(() => $("answerInput").focus(), 0);
+  } else if (hasPuzzle && solved){
+    $("puzzleArea").style.display = "none";
+    $("hintText").textContent = "";
+    setStatus("本关已解锁。", "ok");
+  } else {
+    $("puzzleArea").style.display = "none";
+    $("hintText").textContent = "";
+    setStatus("", "");
+  }
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return { idx: 0, solved: {} };
+    const obj = JSON.parse(raw);
+    if (typeof obj.idx !== "number" || typeof obj.solved !== "object") {
+      return { idx: 0, solved: {} };
+    }
+    obj.idx = Math.max(0, Math.min(SCENES.length - 1, obj.idx));
+    obj.solved = obj.solved || {};
+    return obj;
+  } catch(_){
+    return { idx: 0, solved: {} };
+  }
+}
+
+function saveState(){
+  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+}
+</script>
+</body>
+</html>
